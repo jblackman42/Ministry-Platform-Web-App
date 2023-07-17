@@ -457,12 +457,18 @@ button.submit p {
   justify-content: space-between;
   margin: 1rem 0;
 }
+#login-form-container button {
+  margin: 0;
+}
 #login-form-container p.form-error {
   color: #c0392b;
   margin: 1rem;
 }
 
-#password-reset-container, #get-code-options, #verify-code {
+#password-reset-container,
+#get-code-options,
+#verify-code,
+#create-password {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -470,14 +476,19 @@ button.submit p {
   text-align: center;
   font-size: 20px;
 }
-#password-reset-container #form-error, #get-code-options #form-error, #verify-code #form-error {
+#password-reset-container .form-error,
+#get-code-options .form-error,
+#verify-code .form-error,
+#create-password .form-error {
   display: none;
   visibility: hidden;
   color: #c0392b;
   margin: 0;
 }
 
-#get-code-options, #verify-code {
+#get-code-options,
+#verify-code,
+#create-password {
   display: none;
   visibility: hidden;
 }/*# sourceMappingURL=main.css.map */

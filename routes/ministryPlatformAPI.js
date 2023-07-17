@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const MP = require('../models/MP.js');
+const {MP, getAccessToken} = require('../models/MP.js');
 
 const OTP = new Map();
+
+const verifyOTP = (OTPCode) => {
+  const expirationDate = OTP.get(OTPCode);
+
+  return expirationDate && new Date() < new Date(expirationDate)
+}
 
 router.get('/reset-password/user', async (req, res) => {
   const { email } = req.query;
@@ -26,13 +32,12 @@ router.get('/reset-password/user', async (req, res) => {
     res.send(censoredUser);
   } catch (error) {
     console.log(error)
-    return res.status(500).send({error: 'Internal Server Error'}).end();
+    return res.status(500).send(error).end();
   }
 })
 
 router.get('/reset-password/get-code', async (req, res) => {
   const { User_ID, Method } = req.query;
-  console.log(req.query)
 
   if (!User_ID || !Method) return res.status(400).send({error: 'Missing Parameter: User_ID or Method'}).end();
   
@@ -43,11 +48,12 @@ router.get('/reset-password/get-code', async (req, res) => {
     const newOTPCode = MP.generateTimeBasedCode();
     const OTPExpirationDate = new Date(new Date().getTime() + (expirationMinutes * 60 * 1000))
     OTP.set(newOTPCode, OTPExpirationDate);
-    
-    const text = await MP.sendText(user.Phone_Number, `Here's your code: ${MP.generateTimeBasedCode()}`);
+    // const text = await MP.sendText(user.Phone_Number, `Here's your code: ${MP.generateTimeBasedCode()}`);
+    console.log(newOTPCode)
+    const text = 'yeet'
     res.send(text);
   } catch (error) {
-    res.send(500).send(error).end();
+    res.status(500).send(error).end();
   }
 })
 
@@ -56,21 +62,34 @@ router.post('/reset-password/verify-code', async (req, res) => {
 
   if (!OTPCode) return res.status(400).send({error: 'Missing Data: OTPCode'}).end();
 
-  try {
-    const expirationDate = OTP.get(OTPCode);
+  res.send(verifyOTP(OTPCode));
+})
 
-    if (expirationDate && new Date() < new Date(expirationDate)) {
-      // valid code
-      res.send(true)
-    } else if (expirationDate) {
-      // valid but expired
-      res.send(false)
-    } else {
-      // wrong code
-      res.send(false)
-    }
+router.post('/reset-password/set-password', async (req, res) => {
+  const { User_ID, Password, OTPCode } = req.body;
+
+  if (!User_ID || !Password || !OTPCode) return res.status(400).send({error: 'Missing Data: User_ID or Password'}).end();
+
+  try {
+    if (!verifyOTP(OTPCode)) return res.status(400).send({error: 'Invalid OTP Code'}).end();
+    const newUser = await axios({
+      method: 'put',
+      url: 'https://my.pureheart.org/ministryplatformapi/tables/PCA_Users',
+      data: [{
+        PCA_User_ID: User_ID,
+        Password: Password
+      }],
+      headers: {
+        'Content-Type': 'Application/JSON',
+        'Authorization': 'Bearer ' + await getAccessToken()
+      }
+    })
+      .then(response => response.data)
+
+    res.send(newUser)
   } catch (error) {
-    res.send(500).send(error).end();
+    console.log(error)
+    res.status(500).send(error).end();
   }
 })
 

@@ -2,9 +2,13 @@ const axios = require('axios');
 const qs = require('qs');
 const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
+const sgMail = require('@sendgrid/mail');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
+
+// Set the API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const getAccessToken = async () => {
   const data = await axios({
@@ -142,8 +146,30 @@ const MP = {
     }
   },
   sendEmail: async (toEmail, emailBody) => {
+    // Define the email data
+    const msg = {
+      to: 'jblackman@pureheart.org', // Change to your recipient
+      from: 'info@pureheart.org', // Change to your verified sender
+      subject: 'Sending with SendGrid is Fun',
+      text: 'and easy to do anywhere, even with Node.js',
+      html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+    };
 
+    // Send the email
+    sgMail
+      .send(msg)
+      .then(() => {
+        console.log('Email sent');
+      })
+      .catch((error) => {
+        console.error(error.response.body);
+      });
   }
 }
 
-module.exports = MP;
+MP.sendEmail()
+
+module.exports = {
+  MP,
+  getAccessToken
+};

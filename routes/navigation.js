@@ -6,7 +6,6 @@ const { ensureAuthenticated } = require('../middleware/auth.js')
 
 //home page
 navigation.get('/', ensureAuthenticated, (req, res) => {
-  console.log(req.user)
   res.render('pages/home')
   // res.sendStatus(200);
 })

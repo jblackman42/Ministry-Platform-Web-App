@@ -1,5 +1,5 @@
 const LocalStrategy = require('passport-local').Strategy;
-const MP = require('../models/MP.js');
+const {MP} = require('../models/MP.js');
 
 module.exports = function (passport) {
     //Serialization + deserialization for simultaneous logins
@@ -20,7 +20,7 @@ module.exports = function (passport) {
         new LocalStrategy({ User_Name: 'User_Name' }, (username, password, done) => {
             MP.findOne({ Email_Address: username })
                 .then((user) => {
-                    console.log("User:", user);
+                    // console.log("User:", user);
 
                     if(!user){
                         return done(null,false,{message: 'User not found'});
